@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finance Data Analysis</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            max-width: 400px;
+        }
+        input[type="submit"] {
+            margin-top: 10px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Stock Tickers</h1>
+        <form id="ticker-form">
+            <textarea name="tickers" rows="5" cols="40"></textarea><br>
+            <input type="submit" value="Submit">
+        </form>
+
+        <h2>Results:</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            $('#ticker-form').on('submit', function(e){
+                e.preventDefault();
+                var tickers = $('textarea[name="tickers"]').val();
+                $.ajax({
+                    url: '/submit_tickers',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({tickers: tickers}),
+                    success: function(response){
+                        displayResults(response);
+                    }
+                });
+            });
+
+            function displayResults(results) {
+                if (results.Ticker.length === 0) {
+                    $('#results').html('<p>No data available. Please check the tickers and try again.</p>');
+                    return;
+                }
+
+                var table = '<table>';
+                table += '<tr>';
+                for (var header in results) {
+                    table += '<th>' + header + '</th>';
+                }
+                table += '</tr>';
+
+                var numRows = results.Ticker.length;
+                for (var i = 0; i < numRows; i++) {
+                    table += '<tr>';
+                    for (var key in results) {
+                        var value = results[key][i];
+                        if (typeof value === 'object' && value !== null) {
+                            value = JSON.stringify(value);
+                        }
+                        if (!isNaN(value) && value !== null) {
+                            value = parseFloat(value).toFixed(4);
+                        }
+                        table += '<td>' + value + '</td>';
+                    }
+                    table += '</tr>';
+                }
+
+                table += '</table>';
+                $('#results').html(table);
+            }
+        });
+    </script>
+</body>
+</html>
